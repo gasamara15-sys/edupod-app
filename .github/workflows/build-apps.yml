@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
+  # 1. Android APK 자동 생성 및 빌드
   build-android:
     runs-on: ubuntu-latest
     steps:
@@ -25,6 +26,11 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Generate Android Project Scaffolding
+        run: |
+          flutter create . --org com.edupod --project-name edupod --platforms=android
+          sed -i '/<application/i <uses-permission android:name="android.permission.INTERNET"/>\n<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>' android/app/src/main/AndroidManifest.xml
+
       - name: Install Dependencies
         run: flutter pub get
 
@@ -37,6 +43,7 @@ jobs:
           name: EduPod-Android-APK
           path: build/app/outputs/flutter-apk/app-debug.apk
 
+  # 2. iOS 프로젝트 자동 생성 및 무서명 빌드
   build-ios:
     runs-on: macos-latest
     steps:
@@ -50,13 +57,17 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Generate iOS Project Scaffolding
+        run: |
+          flutter create . --org com.edupod --project-name edupod --platforms=ios
+
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Build iOS App (Unsigned)
         run: flutter build ios --release --no-codesign
 
-      - name: Package iOS Runner.app
+      - name: Package iOS Runner.app to IPA
         run: |
           cd build/ios/iphoneos
           mkdir Payload
