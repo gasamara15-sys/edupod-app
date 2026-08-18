@@ -1,4 +1,4 @@
-name: Build EduPod Android & iOS Apps
+name: Build EduPod Apps
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # 1. Android APK 자동 생성 및 빌드
+  # 1. Android APK 빌드
   build-android:
     runs-on: ubuntu-latest
     steps:
@@ -26,13 +26,17 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Android Project Scaffolding
+      - name: Generate Complete Android Scaffolding
         run: |
+          # 1. 불완전한 android 폴더 삭제 후 정식 파일 풀세트 자동 생성
+          rm -rf android
           flutter create . --org com.edupod --project-name edupod --platforms=android
-          sed -i '/<application/i <uses-permission android:name="android.permission.INTERNET"/>\n<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>' android/app/src/main/AndroidManifest.xml
-
-      - name: Install Dependencies
-        run: flutter pub get
+          
+          # 2. 웹뷰 인터넷 권한 자동 주입
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>' android/app/src/main/AndroidManifest.xml
+          
+          # 3. 필수 라이브러리 동기화
+          flutter pub add webview_flutter
 
       - name: Build Android APK
         run: flutter build apk --debug
@@ -43,7 +47,7 @@ jobs:
           name: EduPod-Android-APK
           path: build/app/outputs/flutter-apk/app-debug.apk
 
-  # 2. iOS 프로젝트 자동 생성 및 무서명 빌드
+  # 2. iOS 번들 빌드
   build-ios:
     runs-on: macos-latest
     steps:
@@ -57,25 +61,22 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate iOS Project Scaffolding
+      - name: Generate Complete iOS Scaffolding
         run: |
+          rm -rf ios
           flutter create . --org com.edupod --project-name edupod --platforms=ios
-
-      - name: Install Dependencies
-        run: flutter pub get
+          flutter pub add webview_flutter
 
       - name: Build iOS App (Unsigned)
         run: flutter build ios --release --no-codesign
 
-      - name: Package iOS Runner.app to IPA
+      - name: Package iOS Runner.app to ZIP
         run: |
           cd build/ios/iphoneos
-          mkdir Payload
-          cp -r Runner.app Payload/
-          zip -r EduPod-iOS.ipa Payload
+          zip -r EduPod-iOS-Runner.zip Runner.app
 
-      - name: Upload iOS IPA
+      - name: Upload iOS Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: EduPod-iOS-Unsigned-IPA
-          path: build/ios/iphoneos/EduPod-iOS.ipa
+          name: EduPod-iOS-Package
+          path: build/ios/iphoneos/EduPod-iOS-Runner.zip
