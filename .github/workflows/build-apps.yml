@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # 1. Android APK 빌드
+  # 1. Android APK 빌드 (푸시 알림 포함)
   build-android:
     runs-on: ubuntu-latest
     steps:
@@ -26,12 +26,12 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Configure Android Project
+      - name: Configure Android & Dependencies
         run: |
           rm -rf android
           flutter create . --org com.edupod --project-name edupod --platforms=android
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>' android/app/src/main/AndroidManifest.xml
-          flutter pub add webview_flutter
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' android/app/src/main/AndroidManifest.xml
+          flutter pub add webview_flutter onesignal_flutter
 
       - name: Build Android APK
         run: flutter build apk --debug
@@ -56,11 +56,11 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Configure iOS Project
+      - name: Configure iOS & Dependencies
         run: |
           rm -rf ios
           flutter create . --org com.edupod --project-name edupod --platforms=ios
-          flutter pub add webview_flutter
+          flutter pub add webview_flutter onesignal_flutter
 
       - name: Build iOS App (Unsigned)
         run: flutter build ios --release --no-codesign
