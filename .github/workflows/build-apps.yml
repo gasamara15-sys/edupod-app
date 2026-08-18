@@ -26,19 +26,19 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Configure Android Project & Kotlin Upgrade
+      - name: Configure Android Project & Upgrade Kotlin to 2.0.21
         run: |
           rm -rf android
           flutter create . --org com.edupod --project-name edupod --platforms=android
           
-          # 💡 [핵심 해결] 코틀린 버전을 최신 1.9.24로 강제 업데이트
-          find android -name "settings.gradle*" -exec sed -i 's/org.jetbrains.kotlin.android" version "[^"]*"/org.jetbrains.kotlin.android" version "1.9.24"/g' {} +
-          find android -name "build.gradle*" -exec sed -i "s/ext.kotlin_version = .*/ext.kotlin_version = '1.9.24'/g" {} +
+          # 💡 [핵심 해결] Kotlin 컴파일러 버전을 2.0.21로 강제 지정
+          find android -name "settings.gradle*" -exec sed -i 's/org.jetbrains.kotlin.android" version "[^"]*"/org.jetbrains.kotlin.android" version "2.0.21"/g' {} +
+          find android -name "build.gradle*" -exec sed -i "s/ext.kotlin_version = .*/ext.kotlin_version = '2.0.21'/g" {} +
           
-          # 인터넷 및 푸시 알림 권한 추가
+          # 인터넷, 네트워크 상태, 안드로이드 13+ 푸시 알림 권한 주입
           sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' android/app/src/main/AndroidManifest.xml
           
-          # 의존성 패키지 설치
+          # 의존성 패키지 동기화
           flutter pub add webview_flutter onesignal_flutter
 
       - name: Build Android APK
