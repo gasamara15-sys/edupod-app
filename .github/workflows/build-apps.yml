@@ -26,16 +26,11 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Complete Android Scaffolding
+      - name: Configure Android Project
         run: |
-          # 1. 불완전한 android 폴더 삭제 후 정식 파일 풀세트 자동 생성
           rm -rf android
           flutter create . --org com.edupod --project-name edupod --platforms=android
-          
-          # 2. 웹뷰 인터넷 권한 자동 주입
           sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>' android/app/src/main/AndroidManifest.xml
-          
-          # 3. 필수 라이브러리 동기화
           flutter pub add webview_flutter
 
       - name: Build Android APK
@@ -61,7 +56,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Complete iOS Scaffolding
+      - name: Configure iOS Project
         run: |
           rm -rf ios
           flutter create . --org com.edupod --project-name edupod --platforms=ios
@@ -70,7 +65,7 @@ jobs:
       - name: Build iOS App (Unsigned)
         run: flutter build ios --release --no-codesign
 
-      - name: Package iOS Runner.app to ZIP
+      - name: Package iOS Runner
         run: |
           cd build/ios/iphoneos
           zip -r EduPod-iOS-Runner.zip Runner.app
