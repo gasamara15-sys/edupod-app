@@ -38,6 +38,15 @@ class _EduPodWebViewAppState extends State<EduPodWebViewApp> {
               _isLoading = false;
             });
           },
+          // 🛡️ [보안 강화] 악성 사이트 및 피싱 차단 (edupod.kr 페이지만 웹뷰 내 허용)
+          onNavigationRequest: (NavigationRequest request) {
+            final uri = Uri.parse(request.url);
+            if (uri.host.isEmpty || uri.host.endsWith('edupod.kr')) {
+              return NavigationDecision.navigate;
+            }
+            // 외부 링크나 검증되지 않은 도메인은 앱 내부 실행 차단
+            return NavigationDecision.prevent;
+          },
         ),
       )
       ..loadRequest(Uri.parse('https://edupod.kr'));
@@ -45,15 +54,16 @@ class _EduPodWebViewAppState extends State<EduPodWebViewApp> {
 
   @override
   Widget build(BuildContext context) {
+    // 💡 Flutter 3.22 호환 뒤로가기 제어 (앱 종료 방지 및 이전 페이지 이동)
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
+      onPopInvoked: (bool didPop) async {
         if (didPop) return;
         if (await _controller.canGoBack()) {
           await _controller.goBack();
         } else {
           if (context.mounted) {
-            Navigator.of(context).pop();
+            Navigator.of(context).maybePop();
           }
         }
       },
@@ -63,6 +73,7 @@ class _EduPodWebViewAppState extends State<EduPodWebViewApp> {
           child: Stack(
             children: [
               RefreshIndicator(
+                color: const Color(0xFF3B82F6),
                 onRefresh: () async {
                   await _controller.reload();
                 },
